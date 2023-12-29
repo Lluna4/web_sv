@@ -6,21 +6,12 @@
 #include <netinet/in.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <thread>
 
-int main()
+void send_response(int new_s)
 {
-    int s = socket(AF_INET, SOCK_STREAM, 0);
-    char buffer[256] = {0};
     char response[1024];
-    struct sockaddr_in addr = {
-        AF_INET,
-        htons(8080),
-        0
-    };
-    bind(s, &addr, sizeof(addr));
-    listen(s, 10);
-
-    int new_s = accept(s, 0, 0);
+    char buffer[256] = {0};
     recv(new_s, buffer, 256, 0);
     char *f = buffer + 5;
     *strchr(f, ' ') = 0;
@@ -32,5 +23,24 @@ int main()
     sendfile(new_s, fd, 0, file_size);
     close(new_s);
     close(fd);
+    
+}
+
+int main()
+{
+    int s = socket(AF_INET, SOCK_STREAM, 0);
+    struct sockaddr_in addr = {
+        AF_INET,
+        htons(8080),
+        0
+    };
+    bind(s, (sockaddr *)&addr, sizeof(addr));
+    while (1)
+    {
+        listen(s, 10);
+        int new_s = accept(s, 0, 0);
+        std::thread response_th(send_response, new_s);
+        response_th.detach();
+    }
     close(s);
 }

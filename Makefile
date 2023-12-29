@@ -1,7 +1,7 @@
-CC = gcc
+CC = g++
 
-all : main.c
-	$(CC) main.c
+all : main.cpp
+	$(CC) main.cpp
 
 clean:
 	rm -rf output/*.out
