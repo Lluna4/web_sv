@@ -17,7 +17,7 @@ int main()
         htons(8080),
         0
     };
-    bind(s, &addra, sizeof(addr));
+    bind(s, &addr, sizeof(addr));
     listen(s, 10);
 
     int new_s = accept(s, 0, 0);
