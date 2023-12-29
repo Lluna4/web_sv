@@ -4,56 +4,33 @@
 #include <sys/sendfile.h>
 #include <unistd.h>
 #include <netinet/in.h>
+#include <stdlib.h>
 #include <stdio.h>
 
-void send_response(int client_fd, const char *content_type, const char *content) {
-    char response[1024];
-    sprintf(response, "HTTP/1.1 200 OK\r\nContent-Type: %s\r\n\r\n%s", content_type, content);
-    send(client_fd, response, strlen(response), 0);
-}
-
-int main() {
+int main()
+{
     int s = socket(AF_INET, SOCK_STREAM, 0);
+    char buffer[256] = {0};
+    char response[1024];
     struct sockaddr_in addr = {
         AF_INET,
-        htons(8080), // Use a specific port, e.g., 8080
+        htons(8080),
         0
     };
-
-    bind(s, (struct sockaddr*)&addr, sizeof(addr));
-
+    bind(s, &addr, sizeof(addr));
     listen(s, 10);
 
-    int client_fd = accept(s, 0, 0);
-
-    char buffer[1024] = {0};
-    recv(client_fd, buffer, sizeof(buffer), 0);
-
-    // Assuming the request is a simple GET request
-    if (strncmp(buffer, "GET ", 4) == 0) {
-        char* f = buffer + 5;
-        char* end = strchr(f, ' ');
-        if (end != NULL) {
-            *end = 0;
-            int opened_fd = open(f, O_RDONLY);
-            if (opened_fd != -1) {
-                // Determine file size
-                off_t file_size = lseek(opened_fd, 0, SEEK_END);
-                lseek(opened_fd, 0, SEEK_SET);
-
-                // Send HTTP response
-                send_response(client_fd, "text/html", "");
-
-                // Send file content
-                sendfile(client_fd, opened_fd, 0, file_size);
-
-                close(opened_fd);
-            }
-        }
-    }
-
-    close(client_fd);
+    int new_s = accept(s, 0, 0);
+    recv(new_s, buffer, 256, 0);
+    char *f = buffer + 5;
+    *strchr(f, ' ') = 0;
+    int fd = open(f, O_RDONLY);
+    off_t file_size = lseek(fd, 0, SEEK_END);
+    lseek(fd, 0, SEEK_SET);
+    sprintf(response, "HTTP/1.1 200 OK\r\nContent-Type: %s\r\n\r\n%s", "text/html", "");
+    send(new_s, response, strlen(response), 0);
+    sendfile(new_s, fd, 0, file_size);
+    close(new_s);
+    close(fd);
     close(s);
-
-    return 0;
 }
