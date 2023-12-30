@@ -13,6 +13,8 @@ void send_response(int new_s)
     char response[1024];
     char buffer[256] = {0};
     recv(new_s, buffer, 256, 0);
+    if (*buffer == '\0')
+        return ;
     char *f = buffer + 5;
     *strchr(f, ' ') = 0;
     int fd = open(f, O_RDONLY);
@@ -23,7 +25,6 @@ void send_response(int new_s)
     sendfile(new_s, fd, 0, file_size);
     close(new_s);
     close(fd);
-    
 }
 
 int main()
@@ -31,7 +32,7 @@ int main()
     int s = socket(AF_INET, SOCK_STREAM, 0);
     struct sockaddr_in addr = {
         AF_INET,
-        htons(8080),
+        htons(8082),
         0
     };
     bind(s, (sockaddr *)&addr, sizeof(addr));
