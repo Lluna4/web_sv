@@ -34,7 +34,7 @@ int main()
         htons(8080),
         0
     };
-    bind(s, (sockaddr *)&addr, sizeof(addr));
+    bind(s, (sockaddr *)&addrw, sizeof(addr));
     while (1)
     {
         listen(s, 10);
