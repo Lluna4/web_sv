@@ -20,6 +20,8 @@ void send_response(int new_s)
     char buffer[2048] = {0};
     char ins[2048] = {0};
     int index = 0;
+    int fd;
+    off_t file_size;
 
     recv(new_s, buffer, 2048, 0);
     if (*buffer == '\0')
@@ -30,16 +32,25 @@ void send_response(int new_s)
         char *f = buffer + 5;
         *strchr(f, ' ') = 0;
         path = f;
-        if (*f == '\0' || std::filesystem::exists(path) == false) 
+        if (*f != '\0' && std::filesystem::exists(path) == false) 
         {
+            log(f);
             sprintf(response, "HTTP/1.0 404 Not found\r\nConnection: close\r\nServer: Luna\r\n\r\n");
             log("Responded: ", "HTTP/1.0 404 Not found");
             send(new_s, response, strlen(response), 0);
             close(new_s);
             return;
         }
-        int fd = open(f, O_RDONLY);
-        off_t file_size = lseek(fd, 0, SEEK_END);
+        if (*f == '\0')
+        {
+            fd = open("index.html", O_RDONLY);
+            file_size = lseek(fd, 0, SEEK_END);
+        }
+        else
+        {
+            fd = open(f, O_RDONLY);
+            file_size = lseek(fd, 0, SEEK_END);
+        }
         lseek(fd, 0, SEEK_SET);
         sprintf(response, "HTTP/1.0 200 OK\r\nContent-Type: %s\r\nConnection: close\r\nServer: Luna\r\n\r\n%s", "text/html", "");
         send(new_s, response, strlen(response), 0);
@@ -65,7 +76,7 @@ int main()
         return -1;
     }
     log("Listening on port 8082");
-    log("Website available at http:/localhost:8082/index.html");
+    log("Website available at http:/localhost:8082/");
     while (1) 
     {
         listen(s, 10);
