@@ -1,7 +1,7 @@
 CC = g++
 
 all : main.cpp
-	$(CC) main.cpp
+	$(CC) main.cpp -std=c++20
 
 clean:
 	rm -rf output/*.out
