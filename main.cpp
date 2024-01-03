@@ -12,8 +12,11 @@
 #include <iostream>
 #include <chrono>
 #include "logging.h"
+#include "config.hpp"
 
-void send_response(int new_s) 
+int PORT = 8082;
+
+void send_response(int new_s)
 {
     char response[2048];
     std::string path;
@@ -65,18 +68,23 @@ int main()
 {
     log("Starting server...");
     int s = socket(AF_INET, SOCK_STREAM, 0);
+    log("Loading config...");
+    if (std::filesystem::exists("http.cfg") == false)
+	    create_config();
+    load_config(&PORT);
     struct sockaddr_in addr = {
         AF_INET,
-        htons(8082),
+        htons(PORT),
         0
     };
+
     if (bind(s, (sockaddr *)&addr, sizeof(addr)) == -1)
     {
         log("Bind failed");
         return -1;
     }
-    log("Listening on port 8082");
-    log("Website available at http:/localhost:8082/");
+    log("Listening on port ", PORT);
+    log("Website available at http:/localhost:", PORT, "/");
     while (1) 
     {
         listen(s, 10);
