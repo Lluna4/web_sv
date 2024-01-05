@@ -96,7 +96,7 @@ std::string get_time()
 		sec = buffer;
 	}
 	sprintf(buffer, "%s:%s:%s", h, min, sec);
-	ret = buffer;
+	std::string ret = buffer;
 	#endif
     
     free(a);
