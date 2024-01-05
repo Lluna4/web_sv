@@ -1,14 +1,14 @@
 #include <string>
 #include <ctime>
 #include <cstring>
-#if __has_include (<vector>)
-	#include <vector>
+#include <vector>
+#if __has_include (<format>)
+	#include <format>
 #else
 	#include <stdio.h>
-	#define NO_VECTOR
-	#pragma warn("No hay <vector>")
+	#define NO_FORMAT
+	#pragma warn("No hay <format>")
 #endif
-#include <format>
 
 static int	ft_intlen(int n)
 {
@@ -70,7 +70,7 @@ std::string get_time()
     std::string h = ft_itoa(a->tm_hour);
     std::string min = ft_itoa(a->tm_min);
     std::string sec = ft_itoa(a->tm_sec);
-	#ifndef NO_VECTOR
+	#ifndef NO_FORMAT
 	if (h.length() == 1)
 		h = std::format("{}{}", "0", h);
 	if (min.length() == 1)
