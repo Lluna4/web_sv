@@ -1,9 +1,17 @@
-#include <sys/socket.h>
+#if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
+    #include <WinSock2.h>
+    #include <WS2tcpip.h>
+    #include <mswsock.h>
+    #pragma comment(lib, "Ws2_32.lib")
+    #define WINDOWS
+#else
+    #include <sys/socket.h>
+    #include <netinet/in.h>
+    #include <sys/sendfile.h>
+#endif
 #include <string.h>
 #include <fcntl.h>
-#include <sys/sendfile.h>
 #include <unistd.h>
-#include <netinet/in.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <thread>
@@ -66,8 +74,18 @@ void send_response(int new_s)
 
 int main() 
 {
+    #ifdef WINDOWS
+    WSADATA wsa;
+    if (WSAStartup(MAKEWORD(2, 2), &wsa) != 0) {
+        printf("WSAStartup failed: %d\n", WSAGetLastError());
+        return 1;
+    }
+    SOCKET s;
+    #else
+    int s = 0;
+    #endif
     log("Starting server...");
-    int s = socket(AF_INET, SOCK_STREAM, 0);
+    s = socket(AF_INET, SOCK_STREAM, 0);
     log("Loading config...");
     if (std::filesystem::exists("http.cfg") == false)
 	    create_config();
@@ -88,7 +106,11 @@ int main()
     while (1) 
     {
         listen(s, 10);
+        #ifdef WINDOWS
+        SOCKET new_s = accept(s, 0, 0);
+        #else
         int new_s = accept(s, 0, 0);
+        #endif
         std::thread response_th(send_response, new_s);
         response_th.detach();
     }
