@@ -1,6 +1,13 @@
 #include <string>
 #include <ctime>
 #include <cstring>
+#if __has_include (<vector>)
+	#include <vector>
+#else
+	#include <stdio.h>
+	#define NO_VECTOR
+	#pragma warn("No hay <vector>")
+#endif
 #include <format>
 
 static int	ft_intlen(int n)
@@ -63,12 +70,31 @@ std::string get_time()
     std::string h = ft_itoa(a->tm_hour);
     std::string min = ft_itoa(a->tm_min);
     std::string sec = ft_itoa(a->tm_sec);
+	#ifndef NO_VECTOR
 	if (h.length() == 1)
 		h = std::format("{}{}", "0", h);
 	if (min.length() == 1)
 		min = std::format("{}{}", "0", min);
     if (sec.length() == 1)
 		sec = std::format("{}{}", "0", sec);
+	#else
+	char buffer[20] = {0};
+	if (h.length() == 1)
+	{
+		sprintf(buffer, "%i%s", '0', h.c_str());
+		h = buffer;
+	}
+	if (min.length() == 1)
+	{
+		sprintf(buffer, "%i%s", '0', min.c_str());
+		min = buffer;
+	}
+	if (h.length() == 1)
+	{
+		sprintf(buffer, "%i%s", '0', sec.c_str());
+		sec = buffer;
+	}
+	#endif
     std::string ret = std::format("{}:{}:{}", h, min, sec);
     free(a);
 	return ret;

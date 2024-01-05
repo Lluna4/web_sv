@@ -11,7 +11,7 @@
 #include <filesystem>
 #include <iostream>
 #include <chrono>
-#include "logging.h"
+#include "logging.hpp"
 #include "config.hpp"
 
 int PORT = 8082;
