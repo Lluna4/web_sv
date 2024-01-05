@@ -77,6 +77,7 @@ std::string get_time()
 		min = std::format("{}{}", "0", min);
     if (sec.length() == 1)
 		sec = std::format("{}{}", "0", sec);
+	std::string ret = std::format("{}:{}:{}", h, min, sec);
 	#else
 	char buffer[20] = {0};
 	if (h.length() == 1)
@@ -94,8 +95,10 @@ std::string get_time()
 		sprintf(buffer, "%i%s", '0', sec.c_str());
 		sec = buffer;
 	}
+	sprintf(buffer, "%s:%s:%s", h, min, sec);
+	ret = buffer;
 	#endif
-    std::string ret = std::format("{}:{}:{}", h, min, sec);
+    
     free(a);
 	return ret;
 }
