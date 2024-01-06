@@ -33,6 +33,7 @@ void send_response(int new_s)
     int index = 0;
     int fd;
     off_t file_size;
+    bool mallocd = false;
 
     recv(new_s, buffer, 2048, 0);
     log(buffer);
@@ -65,6 +66,7 @@ void send_response(int new_s)
                 if (urls.contains(f))
                 {
                     f = strdup(urls[f].get_direction().c_str());
+                    mallocd = true;
                 }
             }
             fd = open(f, O_RDONLY);
@@ -75,6 +77,8 @@ void send_response(int new_s)
         send(new_s, response, strlen(response), 0);
         sendfile(new_s, fd, 0, file_size);
         close(fd);
+        if (mallocd)
+            free(f);
     }
     log("Responded: ", "HTTP/1.0 200 OK");
     close(new_s); 
