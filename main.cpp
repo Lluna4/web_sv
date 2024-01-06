@@ -35,6 +35,7 @@ void send_response(int new_s)
     off_t file_size;
 
     recv(new_s, buffer, 2048, 0);
+    log(buffer);
     if (*buffer == '\0')
         return;
     memccpy(ins, buffer, ' ', 4);
@@ -43,7 +44,7 @@ void send_response(int new_s)
         char *f = buffer + 5;
         *strchr(f, ' ') = 0;
         path = f;
-        if (*f != '\0' && std::filesystem::exists(path) == false) 
+        if (*f != '\0' && std::filesystem::exists(path) == false && (urls.empty() || !urls.contains(f))) 
         {
             log(f);
             sprintf(response, "HTTP/1.0 404 Not found\r\nConnection: close\r\nServer: Luna\r\n\r\n");
@@ -59,6 +60,13 @@ void send_response(int new_s)
         }
         else
         {
+            if (!urls.empty() && strstr(f, ".html") == nullptr)
+            {
+                if (urls.contains(f))
+                {
+                    f = strdup(urls[f].get_direction().c_str());
+                }
+            }
             fd = open(f, O_RDONLY);
             file_size = lseek(fd, 0, SEEK_END);
         }
@@ -89,6 +97,8 @@ int main()
     log("Loading config...");
     if (std::filesystem::exists("http.cfg") == false)
 	    create_config();
+    if (std::filesystem::exists("urls.cfg"))
+        load_url_config();
     load_config(&PORT);
     struct sockaddr_in addr = {
         AF_INET,
