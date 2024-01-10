@@ -33,7 +33,6 @@ void send_response(int new_s)
     int index = 0;
     int fd;
     off_t file_size;
-    bool mallocd = false;
 
     recv(new_s, buffer, 2048, 0);
     log(buffer);
@@ -45,7 +44,7 @@ void send_response(int new_s)
         char *f = buffer + 5;
         *strchr(f, ' ') = 0;
         path = f;
-        if (*f != '\0' && std::filesystem::exists(path) == false && (urls.empty() || !urls.contains(f))) 
+        if (*f != '\0' && (urls.empty() || !urls.contains(f))) 
         {
             log(f);
             sprintf(response, "HTTP/1.0 404 Not found\r\nConnection: close\r\nServer: Luna\r\n\r\n");
@@ -56,8 +55,11 @@ void send_response(int new_s)
         }
         if (*f == '\0')
         {
-            fd = open("index.html", O_RDONLY);
-            file_size = lseek(fd, 0, SEEK_END);
+            if (urls.contains("default"))
+            {
+                fd = open(urls["default"].get_direction().c_str(), O_RDONLY);
+                file_size = lseek(fd, 0, SEEK_END);
+            }
         }
         else
         {
@@ -65,11 +67,22 @@ void send_response(int new_s)
             {
                 if (urls.contains(f))
                 {
-                    f = strdup(urls[f].get_direction().c_str());
-                    mallocd = true;
+                    fd = open(urls[f].get_direction().c_str(), O_RDONLY);
                 }
             }
-            fd = open(f, O_RDONLY);
+            else if (strcmp(f, "favicon.ico") == 0)
+            {
+                fd = open(f, O_RDONLY);
+            }
+            else
+            {
+                log(f);
+                sprintf(response, "HTTP/1.0 404 Not found\r\nConnection: close\r\nServer: Luna\r\n\r\n");
+                log("Responded: ", "HTTP/1.0 404 Not found");
+                send(new_s, response, strlen(response), 0);
+                close(new_s);
+                return;
+            }
             file_size = lseek(fd, 0, SEEK_END);
         }
         lseek(fd, 0, SEEK_SET);
@@ -77,8 +90,6 @@ void send_response(int new_s)
         send(new_s, response, strlen(response), 0);
         sendfile(new_s, fd, 0, file_size);
         close(fd);
-        if (mallocd)
-            free(f);
     }
     log("Responded: ", "HTTP/1.0 200 OK");
     close(new_s); 
